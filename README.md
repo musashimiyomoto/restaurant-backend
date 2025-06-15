@@ -5,7 +5,7 @@
 
 ------------------------------------------------------------------------
 
-# Restoranchiki Backend
+# Restaurant Backend
 
 ## Prerequisites
 
