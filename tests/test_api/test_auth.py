@@ -33,7 +33,7 @@ class TestClientAuthRegister(BaseTestCase):
         assert data["email"] == client_data["email"]
         assert data["first_name"] == client_data["first_name"]
         assert data["last_name"] == client_data["last_name"]
-        assert data["is_active"] is False
+        assert data["is_active"] is True
         assert "created_at" in data
         assert "password" not in data
         assert "hashed_password" not in data
