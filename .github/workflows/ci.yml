@@ -42,7 +42,11 @@ jobs:
       run: chmod +x dev.sh
 
     - name: Check code formatting
-      run: ./dev.sh check
+      run: |
+        set -e
+        ./dev.sh check
 
     - name: Run tests
-      run: ./dev.sh test
+      run: |
+        set -e
+        ./dev.sh test
