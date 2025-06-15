@@ -1,6 +1,7 @@
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
+[![CI/CD Pipeline](https://github.com/musashimiyomoto/restaurant-api/actions/workflows/ci.yml/badge.svg)](https://github.com/musashimiyomoto/restaurant-api/actions/workflows/ci.yml)
 
 ------------------------------------------------------------------------
 
