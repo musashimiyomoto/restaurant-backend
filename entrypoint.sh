@@ -10,5 +10,4 @@ readonly cmd="$*"
 alembic upgrade head
 ###########################
 
-# shellcheck disable=SC2086
 exec $cmd
