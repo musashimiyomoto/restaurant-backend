@@ -38,7 +38,7 @@ repos:
       - id: mixed-line-ending
       - id: name-tests-test
         args: ["--pytest-test-first"]
-        exclude: "tests/factories"
+        exclude: "tests/factories|tests/test_api/base.py"
       - id: trailing-whitespace
   - repo: https://github.com/PyCQA/autoflake
     rev: v2.3.1

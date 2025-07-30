@@ -1,5 +1,5 @@
 import io
-import os
+from pathlib import Path
 
 import pytest
 
@@ -22,4 +22,4 @@ class TestAdminImageUpload(BaseTestCase):
         assert data["url"].endswith(".jpg")
 
         image_name = data["url"].split("/")[-1]
-        os.remove(f"static/images/{image_name}")
+        Path(f"static/images/{image_name}").unlink()

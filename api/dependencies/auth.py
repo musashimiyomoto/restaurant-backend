@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Annotated, Awaitable, Callable
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -6,15 +6,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.dependencies import db
 from enums.role import UserRoleEnum
-from schemas import ClientResponseSchema, UserResponseSchema
+from schemas import ClientResponseSchema, admin
 from usecases.auth import ClientAuthUsecase, UserAuthUsecase
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/token")
 
 
 async def get_current_client(
-    token: str = Depends(dependency=oauth2_scheme),
-    session: AsyncSession = Depends(dependency=db.get_session),
+    token: Annotated[str, Depends(dependency=oauth2_scheme)],
+    session: Annotated[AsyncSession, Depends(dependency=db.get_session)],
 ) -> ClientResponseSchema:
     """Get the current client.
 
@@ -31,7 +31,7 @@ async def get_current_client(
 
 def get_current_user(
     is_validate_admin: bool,
-) -> Callable[[str, AsyncSession], UserResponseSchema]:
+) -> Callable[..., Awaitable[admin.UserResponseSchema]]:
     """Get the current user.
 
     Args:
@@ -43,9 +43,9 @@ def get_current_user(
     """
 
     async def _dependency(
-        token: str = Depends(dependency=oauth2_scheme),
-        session: AsyncSession = Depends(dependency=db.get_session),
-    ) -> UserResponseSchema:
+        token: Annotated[str, Depends(dependency=oauth2_scheme)],
+        session: Annotated[AsyncSession, Depends(dependency=db.get_session)],
+    ) -> admin.UserResponseSchema:
         user = await UserAuthUsecase().get_current(token=token, session=session)
 
         if is_validate_admin and user.role != UserRoleEnum.ADMIN:

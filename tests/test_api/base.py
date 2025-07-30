@@ -79,7 +79,9 @@ class BaseTestCase:
         )
 
         return user.__dict__, {
-            "Authorization": f"{auth_settings.token_type} {response.json()['access_token']}"
+            "Authorization": (
+                f"{auth_settings.token_type} {response.json()['access_token']}"
+            )
         }
 
     async def create_client_and_get_token(

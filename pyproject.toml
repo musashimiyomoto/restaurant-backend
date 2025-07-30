@@ -89,6 +89,7 @@ exclude = ["db/alembic/versions/*.py", "db/alembic/env.py", "helpers/*.py"]
 "tests/*.py" = [
     "S101",    # "Use of `assert` detected"
     "PLR0913", # Too many arguments in function definition
+    "S107",    # Possible hardcoded password assigned to function default
 ]
 
 [tool.pyright]
