@@ -44,17 +44,16 @@ class DishRepository(BaseRepository[Dish]):
 
             return (
                 [category.id]
-                + type_category_ids
-                + sub_type_categories_ids.scalars().all()
+                + list(type_category_ids)
+                + list(sub_type_categories_ids.scalars().all())
             )
-        elif not category.is_sub_type:
+        if not category.is_sub_type:
             sub_type_category_ids = await session.execute(
                 statement=select(Category.id).filter_by(parent_id=category_id)
             )
 
-            return [category.id] + sub_type_category_ids.scalars().all()
-        else:
-            return [category.id]
+            return [category.id] + list(sub_type_category_ids.scalars().all())
+        return [category.id]
 
     async def get_all(self, session: AsyncSession, **filters) -> list[Dish]:
         """Get all dishes.
@@ -89,4 +88,4 @@ class DishRepository(BaseRepository[Dish]):
             )
 
         result = await session.execute(statement=statement)
-        return result.scalars().all()
+        return list(result.scalars().all())

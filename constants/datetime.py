@@ -1,1 +1,3 @@
 DATE_FORMAT = "%Y-%m-%d"
+
+DECEMBER_MONTH = 12

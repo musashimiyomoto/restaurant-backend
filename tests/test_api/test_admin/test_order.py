@@ -23,7 +23,7 @@ class BaseOrderTestCase(BaseTestCase):
         category_name: str = "Test Category",
         dish_name: str = "Test Dish",
         dish_price: Decimal = Decimal("15.99"),
-        dish_weight: Decimal = Decimal("250"),
+        dish_weight: Decimal = Decimal(250),
         order_status: OrderStatusEnum = OrderStatusEnum.CLIENT_NEW,
         order_price: Decimal = Decimal("31.98"),
         dish_quantity: int = 2,

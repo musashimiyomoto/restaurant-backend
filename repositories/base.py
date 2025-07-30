@@ -10,7 +10,9 @@ class BaseRepository(Generic[Model]):
     def __init__(self, model: Type[Model]):
         self.model = model
 
-    async def create(self, session: AsyncSession, data: dict[str, Any]) -> Model:
+    async def create(
+        self, session: AsyncSession, data: dict[str, Any], *args, **kwargs
+    ) -> Model:
         """Create a new model instance.
 
         Args:
@@ -43,7 +45,7 @@ class BaseRepository(Generic[Model]):
         result = await session.execute(
             statement=select(self.model).filter_by(**filters)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_by(self, session: AsyncSession, **filters) -> Model | None:
         """Get a model instance by filters.

@@ -1,4 +1,4 @@
-import random
+import secrets
 import smtplib
 from datetime import UTC, datetime, timedelta
 from email.mime.multipart import MIMEMultipart
@@ -97,7 +97,7 @@ class BaseAuthUsecase:
 
         """
         try:
-            payload = jwt.decode(
+            return jwt.decode(
                 token=token,
                 key=(
                     auth_settings.user_secret_key
@@ -106,9 +106,8 @@ class BaseAuthUsecase:
                 ),
                 algorithms=[auth_settings.algorithm],
             )
-            return payload
-        except JWTError:
-            raise self._credentials_exception
+        except JWTError as e:
+            raise self._credentials_exception from e
 
     @staticmethod
     def _generate_code() -> str:
@@ -118,7 +117,7 @@ class BaseAuthUsecase:
             The code.
 
         """
-        return str(random.randint(100000, 999999))
+        return str(secrets.randbelow(900000) + 100000)
 
 
 class ClientAuthUsecase(BaseAuthUsecase):
@@ -132,7 +131,7 @@ class ClientAuthUsecase(BaseAuthUsecase):
         email: str | None,
         telegram_id: int | None,
         password: str,
-    ) -> ClientResponseSchema | bool:
+    ) -> ClientResponseSchema:
         """Authenticate a client.
 
         Args:
@@ -154,13 +153,13 @@ class ClientAuthUsecase(BaseAuthUsecase):
         else:
             raise self._credentials_exception
 
-        if not client:
-            return False
+        if not client or not client.hashed_password:
+            raise self._credentials_exception
 
         if not self._verify_password(
             plain_password=password, hashed_password=client.hashed_password
         ):
-            return False
+            raise self._credentials_exception
 
         return ClientResponseSchema.model_validate(client)
 
@@ -306,7 +305,7 @@ class UserAuthUsecase(BaseAuthUsecase):
 
     async def _authenticate(
         self, session: AsyncSession, email: str, password: str
-    ) -> admin.UserResponseSchema | bool:
+    ) -> admin.UserResponseSchema:
         """Authenticate a user.
 
         Args:
@@ -320,13 +319,13 @@ class UserAuthUsecase(BaseAuthUsecase):
         """
         user = await self._user_repository.get_by(session=session, email=email)
 
-        if not user or not user.is_active:
-            return False
+        if not user or not user.is_active or not user.hashed_password:
+            raise self._credentials_exception
 
         if not self._verify_password(
             plain_password=password, hashed_password=user.hashed_password
         ):
-            return False
+            raise self._credentials_exception
 
         return admin.UserResponseSchema.model_validate(user)
 
@@ -483,10 +482,10 @@ class UserAuthUsecase(BaseAuthUsecase):
         await redis.set_verify_code(identifier=user.email, code=code)
 
         html = (
-            "<html><body><p>Код, который следует скопировать и испольовать для авторизации:"
-            f"</p><h3>{code}</h3><p>Это письмо отправил робот, который не проверяет входящую"
-            " почту</p></body></html>"
-        )
+            "<html><body><p>Код, который следует скопировать и испольовать для "
+            "авторизации:</p><h3>{code}</h3><p>Это письмо отправил робот, который "
+            "не проверяет входящую почту</p></body></html>"
+        ).format(code=code)
 
         message = MIMEMultipart()
         message["Subject"] = "Ваш код для верификации"

@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Body, Depends, Path, Query, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,12 +12,13 @@ router = APIRouter(prefix="/dish", tags=["Admin | Dish"])
 
 @router.get(path="/list")
 async def get_list(
-    filters: DishFilterSchema = Query(default=..., description="Dish filters"),
-    session: AsyncSession = Depends(dependency=db.get_session),
-    usecase: dish.DishUsecase = Depends(dependency=dish.get_dish_usecase),
-    current_user: admin.UserResponseSchema = Depends(
-        dependency=auth.get_current_user(is_validate_admin=True)
-    ),
+    filters: Annotated[DishFilterSchema, Query(description="Dish filters")],
+    session: Annotated[AsyncSession, Depends(dependency=db.get_session)],
+    usecase: Annotated[dish.DishUsecase, Depends(dependency=dish.get_dish_usecase)],
+    current_user: Annotated[
+        admin.UserResponseSchema,
+        Depends(dependency=auth.get_current_user(is_validate_admin=True)),
+    ],
 ) -> list[DishResponseSchema]:
     return await usecase.get_dishes(
         session=session, user_id=current_user.id, category_id=filters.category_id
@@ -24,14 +27,13 @@ async def get_list(
 
 @router.post(path="/create")
 async def create(
-    data: admin.DishCreateSchema = Body(
-        default=..., description="Dish data for create"
-    ),
-    session: AsyncSession = Depends(dependency=db.get_session),
-    usecase: dish.DishUsecase = Depends(dependency=dish.get_dish_usecase),
-    current_user: admin.UserResponseSchema = Depends(
-        dependency=auth.get_current_user(is_validate_admin=True)
-    ),
+    data: Annotated[admin.DishCreateSchema, Body(description="Dish data for create")],
+    session: Annotated[AsyncSession, Depends(dependency=db.get_session)],
+    usecase: Annotated[dish.DishUsecase, Depends(dependency=dish.get_dish_usecase)],
+    current_user: Annotated[
+        admin.UserResponseSchema,
+        Depends(dependency=auth.get_current_user(is_validate_admin=True)),
+    ],
 ) -> DishResponseSchema:
     return await usecase.create_dish(
         session=session, data=data, user_id=current_user.id
@@ -40,15 +42,14 @@ async def create(
 
 @router.put(path="/{dish_id}")
 async def update(
-    dish_id: int = Path(default=..., description="Dish ID"),
-    data: admin.DishUpdateSchema = Body(
-        default=..., description="Dish data for update"
-    ),
-    session: AsyncSession = Depends(dependency=db.get_session),
-    usecase: dish.DishUsecase = Depends(dependency=dish.get_dish_usecase),
-    current_user: admin.UserResponseSchema = Depends(
-        dependency=auth.get_current_user(is_validate_admin=True)
-    ),
+    dish_id: Annotated[int, Path(description="Dish ID")],
+    data: Annotated[admin.DishUpdateSchema, Body(description="Dish data for update")],
+    session: Annotated[AsyncSession, Depends(dependency=db.get_session)],
+    usecase: Annotated[dish.DishUsecase, Depends(dependency=dish.get_dish_usecase)],
+    current_user: Annotated[
+        admin.UserResponseSchema,
+        Depends(dependency=auth.get_current_user(is_validate_admin=True)),
+    ],
 ) -> DishResponseSchema:
     return await usecase.update_dish(
         session=session, dish_id=dish_id, data=data, user_id=current_user.id
@@ -57,12 +58,13 @@ async def update(
 
 @router.delete(path="/{dish_id}")
 async def delete(
-    dish_id: int = Path(default=..., description="Dish ID"),
-    session: AsyncSession = Depends(dependency=db.get_session),
-    usecase: dish.DishUsecase = Depends(dependency=dish.get_dish_usecase),
-    current_user: admin.UserResponseSchema = Depends(
-        dependency=auth.get_current_user(is_validate_admin=True)
-    ),
+    dish_id: Annotated[int, Path(description="Dish ID")],
+    session: Annotated[AsyncSession, Depends(dependency=db.get_session)],
+    usecase: Annotated[dish.DishUsecase, Depends(dependency=dish.get_dish_usecase)],
+    current_user: Annotated[
+        admin.UserResponseSchema,
+        Depends(dependency=auth.get_current_user(is_validate_admin=True)),
+    ],
 ) -> JSONResponse:
     await usecase.delete_dish(session=session, dish_id=dish_id, user_id=current_user.id)
 

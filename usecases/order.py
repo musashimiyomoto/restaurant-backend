@@ -59,7 +59,8 @@ class OrderUsecase:
             session=session, id=order_id, **filters
         )
         if not order:
-            raise ValueError(f"Order with id {order_id} not found")
+            msg = f"Order with id {order_id} not found"
+            raise ValueError(msg)
         return order
 
     @staticmethod
@@ -83,15 +84,17 @@ class OrderUsecase:
             current_user.id,
             current_user.parent_id,
         ]:
-            raise ValueError(
+            msg = (
                 f"User with id {current_user.id} is not allowed"
                 f" to access order with id {order.id}"
             )
+            raise ValueError(msg)
         if current_client and order.client_id != current_client.id:
-            raise ValueError(
+            msg = (
                 f"Client with id {current_client.id} is not allowed"
                 f" to access order with id {order.id}"
             )
+            raise ValueError(msg)
 
     @staticmethod
     def _get_available_status_transitions(
@@ -295,7 +298,7 @@ class OrderUsecase:
             },
         )
 
-        await self._order_dish_repository.create(
+        await self._order_dish_repository.create_with_dishes(
             session=session,
             order_id=order.id,
             data=[
@@ -314,7 +317,8 @@ class OrderUsecase:
         current_user: admin.UserResponseSchema | None = None,
         current_client: ClientResponseSchema | None = None,
     ) -> OrderResponseSchema:
-        """Update the order status according to the status flow and user role permissions.
+        """Update the order status according to the status flow and user role
+        permissions.
 
         Args:
             session: The session.
@@ -337,7 +341,8 @@ class OrderUsecase:
             current_user=current_user,
             current_client=current_client,
         ):
-            raise ValueError("Invalid status transition")
+            msg = "Invalid status transition"
+            raise ValueError(msg)
 
         await self._order_status_repository.close_previous_status(
             session=session, order_id=order_id, end_date=datetime.now(tz=UTC)
@@ -359,10 +364,23 @@ class OrderUsecase:
             id=order_id,
         )
 
+        if order is None:
+            msg = "Order not found"
+            raise ValueError(msg)
+
+        user_id = (
+            current_user.id
+            if current_user
+            else (current_client.user_id if current_client else None)
+        )
+        if user_id is None:
+            msg = "No valid user or client found"
+            raise ValueError(msg)
+
         await self._publish_update_order_status(
             order_status=new_status,
             order_id=order_id,
-            user_id=current_user.id if current_user else current_client.user_id,
+            user_id=user_id,
         )
 
         return OrderResponseSchema(

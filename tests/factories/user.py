@@ -25,6 +25,6 @@ class UserFactory(AsyncSQLAlchemyModelFactory):
     is_active = True
 
     @factory.post_generation
-    def set_hashed_password(obj, create, extracted, **kwargs):
+    def set_hashed_password(self, create, extracted, **kwargs):
         if extracted:
-            obj.hashed_password = f"hashed_{extracted}"
+            self.hashed_password = f"hashed_{extracted}"

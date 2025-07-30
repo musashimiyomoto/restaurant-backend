@@ -4,7 +4,7 @@ from typing import Any
 from sqlalchemy import func, join, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from constants.datetime import DATE_FORMAT
+from constants.datetime import DATE_FORMAT, DECEMBER_MONTH
 from db.models import Client, Order, OrderStatus
 from enums.order import OrderStatusEnum
 from enums.statistics import StatisticsIntervalEnum
@@ -19,12 +19,13 @@ class StatisticsRepository:
     ) -> datetime:
         if interval_type == StatisticsIntervalEnum.DAILY:
             return date.replace(hour=0, minute=0, second=0, microsecond=0)
-        elif interval_type == StatisticsIntervalEnum.WEEKLY:
+        if interval_type == StatisticsIntervalEnum.WEEKLY:
             return (date - timedelta(days=date.weekday())).replace(
                 hour=0, minute=0, second=0, microsecond=0
             )
-        elif interval_type == StatisticsIntervalEnum.MONTHLY:
+        if interval_type == StatisticsIntervalEnum.MONTHLY:
             return date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        return None
 
     def _get_next_date(
         self, current_date: datetime, interval: StatisticsIntervalEnum
@@ -41,13 +42,13 @@ class StatisticsRepository:
         """
         if interval == StatisticsIntervalEnum.DAILY:
             return current_date + timedelta(days=1)
-        elif interval == StatisticsIntervalEnum.WEEKLY:
+        if interval == StatisticsIntervalEnum.WEEKLY:
             return current_date + timedelta(weeks=1)
-        elif interval == StatisticsIntervalEnum.MONTHLY:
-            if current_date.month == 12:
+        if interval == StatisticsIntervalEnum.MONTHLY:
+            if current_date.month == DECEMBER_MONTH:
                 return datetime(current_date.year + 1, 1, 1)
-            else:
-                return datetime(current_date.year, current_date.month + 1, 1)
+            return datetime(current_date.year, current_date.month + 1, 1)
+        return None
 
     async def _get_orders_count(
         self,
@@ -75,7 +76,7 @@ class StatisticsRepository:
                 Order.created_at < next_date,
             )
         )
-        return result.scalar()
+        return result.scalar() or 0
 
     async def _get_clients_count(
         self,
@@ -103,7 +104,7 @@ class StatisticsRepository:
                 Client.created_at < next_date,
             )
         )
-        return result.scalar()
+        return result.scalar() or 0
 
     async def _get_avg_order_price(
         self,

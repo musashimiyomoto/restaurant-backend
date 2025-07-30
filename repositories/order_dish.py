@@ -12,7 +12,7 @@ class OrderDishRepository(BaseRepository[OrderDish]):
     def __init__(self):
         super().__init__(OrderDish)
 
-    async def create(
+    async def create_with_dishes(
         self, session: AsyncSession, order_id: int, data: list[dict[str, Any]]
     ) -> None:
         """Create a new order dish.

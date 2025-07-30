@@ -23,8 +23,6 @@ class OrderHelper:
         self.sample_dishes = []
 
     async def create_dishes(self, dishes_count: int = 10) -> list[dict]:
-        print(f"🍽️ Creating {dishes_count} dishes...")
-
         dishes = []
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
@@ -37,8 +35,7 @@ class OrderHelper:
             if response.status_code == HTTPStatus.OK:
                 token = response.json()["access_token"]
             else:
-                print(f"❌ Error getting token: {response.text}")
-                return
+                return dishes
 
             category_ids = []
             response = await client.get(
@@ -48,8 +45,7 @@ class OrderHelper:
             if response.status_code == HTTPStatus.OK:
                 category_ids = [category["id"] for category in response.json()]
             else:
-                print(f"❌ Error getting categories: {response.text}")
-                return
+                return dishes
 
             for _ in range(dishes_count):
                 response = await client.post(
@@ -66,8 +62,7 @@ class OrderHelper:
                 if response.status_code == HTTPStatus.OK:
                     photo_url = response.json()["url"]
                 else:
-                    print(f"❌ Error uploading image: {response.text}")
-                    return
+                    return dishes
 
                 response = await client.post(
                     f"{self.base_url}/admin/dish/create",
@@ -83,22 +78,18 @@ class OrderHelper:
                 )
 
                 if response.status_code == HTTPStatus.OK:
-                    print(f"✅ Dish created")
                     dishes.append(
                         {"id": response.json()["id"], "price": response.json()["price"]}
                     )
                 else:
-                    print(f"❌ Error creating dish: {response.text}")
-
-        print(f"✅ Created {dishes_count} dishes")
+                    pass
 
         return dishes
 
     async def create_clients(self, num_clients: int = NUM_CLIENTS):
-        print(f"👥 Creating {num_clients} test clients...")
 
         async with httpx.AsyncClient(timeout=30.0) as client:
-            for i in range(num_clients):
+            for _i in range(num_clients):
                 client_data = {
                     "user_id": USER_ID,
                     "email": fake.email(),
@@ -126,15 +117,10 @@ class OrderHelper:
                         client_info = response.json()
                         client_data["id"] = client_info["id"]
                         self.clients.append(client_data)
-                        print(
-                            f"✅ Client {i+1}/{num_clients} created: {client_data['email']}"
-                        )
                     else:
-                        print(f"❌ Error creating client {i+1}: {response.text}")
-                except Exception as e:
-                    print(f"❌ Exception creating client {i+1}: {e}")
-
-        print(f"✅ Created {len(self.clients)} clients")
+                        pass
+                except Exception:
+                    pass
 
     async def get_auth_token(self, client_data: dict) -> str | None:
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -149,13 +135,8 @@ class OrderHelper:
 
                 if response.status_code == HTTPStatus.OK:
                     return response.json()["access_token"]
-                else:
-                    print(
-                        f"❌ Error getting token for {client_data['email']}: {response.text}"
-                    )
-                    return None
-            except Exception as e:
-                print(f"❌ Exception getting token for {client_data['email']}: {e}")
+                return None
+            except Exception:
                 return None
 
     async def create_orders_for_client(
@@ -167,13 +148,13 @@ class OrderHelper:
 
         headers = {"Authorization": f"Bearer {token}"}
 
-        for i in range(num_orders):
+        for _i in range(num_orders):
             try:
                 num_dishes = random.randint(1, 4)
                 selected_dishes = random.sample(self.sample_dishes, num_dishes)
 
                 order_dishes = []
-                total_price = Decimal("0")
+                total_price = Decimal(0)
 
                 for dish in selected_dishes:
                     quantity = random.randint(1, 2)
@@ -210,48 +191,30 @@ class OrderHelper:
                             headers=headers,
                         )
                         if res.status_code == HTTPStatus.OK:
-                            print(f"✅ Order {i+1}/{num_orders} status updated")
+                            pass
                         else:
-                            print(f"❌ Error updating order status: {res.text}")
+                            pass
 
-                        print(f"✅ Order {i+1}/{num_orders} created")
                     else:
-                        print(f"❌ Error creating order: {response.text}")
-            except Exception as e:
-                print(
-                    f"❌ Exception creating order {i+1} for {client_data['email']}: {e}"
-                )
+                        pass
+            except Exception:
+                pass
 
     async def create_all_orders(self):
-        print(f"🛒 Creating orders for {len(self.clients)} clients...")
 
         self.sample_dishes = await self.create_dishes()
 
         for client_data in self.clients:
             await self.create_orders_for_client(client_data=client_data)
 
-        print("✅ Orders creation completed")
-
     async def run(self):
-        print("🚀 Starting test data generation (simplified version)")
-        print(f"🎯 API URL: {self.base_url}")
-        print(f"👥 Number of clients: {NUM_CLIENTS}")
-        print(f"🛒 Orders per client: {ORDERS_PER_CLIENT}")
-        print(f"👥 User ID: {USER_ID}")
-        print("-" * 50)
 
         await self.create_clients()
 
         if not self.clients:
-            print("❌ Failed to create clients")
             return
 
         await self.create_all_orders()
-
-        print("-" * 50)
-        print("🎉 Test data generation completed!")
-        print(f"📊 Created clients: {len(self.clients)}")
-        print(f"📊 Expected orders: {len(self.clients) * ORDERS_PER_CLIENT}")
 
 
 async def main():
@@ -259,11 +222,8 @@ async def main():
         async with httpx.AsyncClient() as client:
             response = await client.get(f"{API_BASE_URL}/docs")
             if response.status_code != HTTPStatus.OK:
-                print(f"⚠️ API is not available at {API_BASE_URL}")
-                print("Make sure the server is running")
                 return
-    except Exception as e:
-        print(f"❌ Error connecting to API: {e}")
+    except Exception:
         return
 
     await OrderHelper().run()
