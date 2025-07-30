@@ -37,7 +37,7 @@ class DeliveryUsecase:
         user_id: int,
         delivery_id: int,
         data: admin.DeliveryUpdateSchema,
-    ) -> DeliveryResponseSchema | None:
+    ) -> DeliveryResponseSchema:
         """Update a delivery.
 
         Args:
