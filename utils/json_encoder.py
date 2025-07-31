@@ -1,12 +1,13 @@
 import json
 from decimal import Decimal
 from enum import Enum
+from typing import Any
 
 
 class CustomJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, Enum):
-            return obj.value
-        if isinstance(obj, Decimal):
-            return float(obj)
-        return super().default(obj)
+    def default(self, o: Any):
+        if isinstance(o, Enum):
+            return o.value
+        if isinstance(o, Decimal):
+            return float(o)
+        return super().default(o)

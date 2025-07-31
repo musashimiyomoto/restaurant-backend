@@ -88,8 +88,9 @@ exclude = ["db/alembic/versions/*.py", "db/alembic/env.py", "helpers/*.py"]
 [tool.ruff.lint.per-file-ignores]
 "tests/*.py" = [
     "S101",    # "Use of `assert` detected"
-    "PLR0913", # Too many arguments in function definition
-    "S107",    # Possible hardcoded password assigned to function default
+    "PLR0913", # "Too many arguments in function definition"
+    "S107",    # "Possible hardcoded password assigned to function default"
+    "PGH003",  # "Use specific rule codes when ignoring type issues"
 ]
 
 [tool.pyright]

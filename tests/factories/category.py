@@ -1,4 +1,4 @@
-import factory
+from factory.declarations import LazyAttribute, Sequence
 
 from db.models.category import Category
 
@@ -6,11 +6,11 @@ from .base import AsyncSQLAlchemyModelFactory, fake
 
 
 class CategoryFactory(AsyncSQLAlchemyModelFactory):
-    class Meta:
+    class Meta:  # type: ignore
         model = Category
 
-    user_id = factory.Sequence(lambda n: n + 1)
+    user_id = Sequence(lambda n: n + 1)
     parent_id = None
-    name = factory.LazyAttribute(lambda obj: fake.word().capitalize())
+    name = LazyAttribute(lambda obj: fake.word().capitalize())
     is_type = False
     is_sub_type = False
