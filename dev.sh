@@ -193,9 +193,8 @@ build_docker() {
         print_warning "Container status:"
         docker-compose ps
         echo ""
-        print_success "API available at: http://localhost:8000"
+        print_success "API available at: http://localhost:5000"
         print_success "DB UI available at: http://localhost:8080"
-        print_success "Broker UI available at: http://localhost:3000"
         print_success "Redis UI available at: http://localhost:5540"
     else
         print_error "Error starting containers"
