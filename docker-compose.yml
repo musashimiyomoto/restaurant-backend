@@ -1,64 +1,86 @@
+x-prefect: &prefect
+  image: ${PREFECT_IMAGE}
+  restart: always
+  env_file:
+    - .env
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+x-app: &app
+  build:
+    context: .
+  restart: always
+  env_file:
+    - .env
+  depends_on:
+    postgres:
+      condition: service_healthy
+    chroma:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    prefect-server:
+      condition: service_healthy
+
 services:
   api:
-    build:
-      context: .
-    restart: always
-    env_file:
-      - .env
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+    <<: *app
     ports:
       - "5000:5000"
-    volumes:
-      - images_data:/code/static/images
     command: [ "bash", "/docker-entrypoint.sh", "gunicorn", "main:app" ]
 
-  db:
-    image: postgres:14-alpine
+  postgres:
+    image: ${POSTGRES_IMAGE}
     restart: always
     environment:
-      POSTGRES_USER: ${DB_LOGIN}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
-    env_file:
-      - .env
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgres/data
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_LOGIN}"]
+      test:
+        - "CMD"
+        - "sh"
+        - "-c"
+        - "pg_isready -U ${POSTGRES_USER}"
       interval: 5s
-      timeout: 5s
-      retries: 5
+      timeout: 3s
+      retries: 40
 
-  db-ui:
-    image: adminer
+  adminer:
+    image: ${ADMINER_IMAGE}
     restart: always
     ports:
       - "8080:8080"
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
 
   redis:
-    image: redis:alpine
+    image: ${REDIS_IMAGE}
     restart: always
+    healthcheck:
+      test:
+        - "CMD"
+        - "redis-cli"
+        - "ping"
+      interval: 5s
+      timeout: 3s
+      retries: 40
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    healthcheck:
-      test: ["CMD-SHELL", "redis-cli ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
-  redis-ui:
-    image: redis/redisinsight
+  redisinsight:
+    image: ${REDISINSIGHT_IMAGE}
     restart: always
     ports:
       - "5540:5540"
@@ -66,7 +88,58 @@ services:
       redis:
         condition: service_healthy
 
+  chroma:
+    image: ${CHROMA_IMAGE}
+    restart: always
+    healthcheck:
+      test:
+        - "CMD"
+        - "/bin/bash"
+        - "-c"
+        - "cat < /dev/null > /dev/tcp/localhost/8000"
+      interval: 5s
+      timeout: 3s
+      retries: 40
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/data
+
+  prefect-server:
+    <<: *prefect
+    ports:
+      - "4200:4200"
+    environment:
+      PREFECT_API_URL: http://127.0.0.1:4200/api
+    healthcheck:
+      test:
+        - "CMD"
+        - "python"
+        - "-c"
+        - "import sys"
+        - "import httpx"
+        - "sys.exit(0 if httpx.get('http://localhost:4200/api/health', timeout=1).status_code==200 else 1)"
+      interval: 5s
+      timeout: 3s
+      retries: 60
+    command: [ "prefect", "server", "start", "--no-services" ]
+
+  prefect-services:
+    <<: *prefect
+    depends_on:
+      prefect-server:
+        condition: service_healthy
+    command: [ "prefect", "server", "services", "start" ]
+
+  prefect-worker:
+    <<: *app
+    command: [ "prefect", "worker", "start", "--pool", "local-pool" ]
+    deploy:
+      replicas: 1
+
 volumes:
-  postgres_data:
   images_data:
+  postgres_data:
+  prefect_data:
+  chroma_data:
   redis_data:
