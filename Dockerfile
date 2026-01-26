@@ -47,5 +47,6 @@ RUN chmod +x '/docker-entrypoint.sh' \
     && sed -i 's/\r$//g' '/docker-entrypoint.sh'
 
 COPY --chown=web:web . /code
+RUN mkdir -p /static/images
 
 USER web
