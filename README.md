@@ -9,134 +9,92 @@
 
 # Restaurant Backend
 
-## Prerequisites
+## Requirements
 
-- **Docker & Docker Compose** - for containerized development
-- **Poetry** - for local development and dependency management
+- Python 3.11
+- Poetry
+- Docker and Docker Compose
 
-## Quick Start
+## Quick Start with Makefile
 
-The fastest way to get started is using our unified development script:
+This project includes a comprehensive Makefile that simplifies common development tasks. To see all available commands:
 
 ```bash
-# Make script executable (first time only)
-chmod +x dev.sh
-
-# Run full development cycle: format code, run tests, and build Docker
-./dev.sh
-
-# Or run specific operations:
-./dev.sh format  # Format code with isort and black
-./dev.sh test    # Run tests with pytest
-./dev.sh build   # Build and run Docker Compose
-
-# Database migrations:
-./dev.sh migrate generate "Add user table"   # Generate new migration
-./dev.sh migrate upgrade                     # Apply all pending migrations
-./dev.sh migrate downgrade                   # Rollback last migration
-./dev.sh migrate history                     # Show migration history
-./dev.sh migrate current                     # Show current migration
+make help
 ```
 
-## Setup
+### Docker Run
 
-1. Clone the repository
-2. Create environment file:
-   ```bash
-   cp .env.example .env
-   ```
-3. Install dependencies:
-   ```bash
-   poetry install --with dev,test
-   ```
-
-## Docker Development (Recommended)
-
-### Starting the Application
-
+1. **Create .env file**:
 ```bash
-# Using development script (recommended)
-./dev.sh build
-
-# Or manually
-docker-compose up --build
+cp .env.example .env
 ```
 
-### Accessing Services
-
-After successful launch:
-- **API**: http://localhost:5000
-- **DB UI**: http://localhost:8080
-  - System: PostgreSQL
-  - Server: db
-  - Username: postgres
-  - Password: postgres
-  - Database: restoranchiki
-- **Redis UI**: http://localhost:5540
-  - Connection string: redis:6379
-
-### Docker Commands
-
+2. **Build and start the application**:
 ```bash
-# Stop all services
-docker-compose down
+make build
+```
+This command will:
+- Automatically copy `.env.example` to `.env` if it doesn't exist
+- Build and start the application using Docker Compose
 
-# Rebuild and start
-docker-compose up --build
-
-# View logs
-docker-compose logs -f api
-
-# Execute commands in running container
-docker-compose exec api bash
+3. **Stop the application**:
+```bash
+make stop
 ```
 
-## Local Development
+4. **Access the API documentation**:
+  - **API**: http://localhost:5000
+  - **DB UI**: http://localhost:8080
+    - System: PostgreSQL
+    - Server: db
+    - Username: postgres
+    - Password: postgres
+    - Database: restoranchiki
+  - **Redis UI**: http://localhost:5540
+    - Connection string: redis:6379
 
-### Database Migrations
+## Development
 
-The development script automatically handles environment switching for migrations:
+### Setup
 
+1. **Install all dependencies and setup pre-commit hooks**:
 ```bash
-# Generate new migration
-./dev.sh migrate generate "Add user table"
+make install
+```
+This command will:
+- Install all project dependencies including development and test dependencies
+- Set up pre-commit hooks for code quality
 
-# Apply all pending migrations
-./dev.sh migrate upgrade
+### Available Makefile Commands
 
-# Show migration history
-./dev.sh migrate history
+| Command | Description |
+|---------|-------------|
+| `make help` | Show all available commands with descriptions |
+| `make install` | Install dependencies and setup pre-commit hooks |
+| `make format` | Format code using black and isort |
+| `make check` | Run code quality checks with ruff and pyright |
+| `make test` | Run tests with coverage reporting |
+| `make build` | Build and start the application with Docker Compose |
+| `make stop` | Stop the Docker Compose services |
 
-# Show current migration
-./dev.sh migrate current
+### Development Workflow
 
-# Rollback last migration
-./dev.sh migrate downgrade
-
-# Rollback to specific migration or base
-./dev.sh migrate downgrade base
+1. **Initial setup**:
+```bash
+make install
 ```
 
-### Code Formatting
-
+2. **Before committing code**:
 ```bash
-# Using development script
-./dev.sh format
-
-# Or manually
-poetry run isort .
-poetry run black .
+make format    # Format your code
+make check     # Run linting and type checks
+make test      # Run tests
 ```
 
-### Running Tests
-
+3. **Build and test the application**:
 ```bash
-# Using development script
-./dev.sh test
-
-# Or manually
-poetry run pytest -v
-
-# Run specific test file
-poetry run pytest tests/test_api/test_admin/ -v
+make build     # Start the application
+# Test your changes
+make stop      # Stop when done
 ```
