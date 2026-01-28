@@ -8,20 +8,36 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+from testcontainers.postgres import PostgresContainer
 
 from api.dependencies import db
-from db.models.base import Base
+from db.models import Base
 from main import app
+from settings import postgres_settings
+
+
+@pytest_asyncio.fixture(scope="session")
+async def postgres_container() -> AsyncGenerator[PostgresContainer, None]:
+    with PostgresContainer(image=postgres_settings.image, driver="asyncpg") as postgres:
+        yield postgres
 
 
 @pytest_asyncio.fixture(scope="function")
-async def test_engine() -> AsyncGenerator[AsyncEngine, None]:
-    engine = create_async_engine(url="sqlite+aiosqlite:///:memory:", echo=False)
+async def test_engine(
+    postgres_container: PostgresContainer,
+) -> AsyncGenerator[AsyncEngine, None]:
+    engine = create_async_engine(
+        url=postgres_container.get_connection_url(),
+        echo=False,
+    )
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
     yield engine
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
 
     await engine.dispose()
 

@@ -12,7 +12,12 @@ alembic = "1.14.1"
 fastapi = { extras = ["standard"], version = "0.115.7" }
 gunicorn = { extras = ["gevent"], version = "23.0.0" }
 redis = { extras = ["hiredis"], version = "6.1.0" }
-pydantic-settings = "2.5.2"
+pydantic-ai-slim = { extras = ["google", "openai"], version = "1.0.3" }
+logfire = { extras = ["fastapi", "sqlalchemy", "redis"], version = "4.6.0" }
+pydantic = "2.11.7"
+pydantic-settings = "2.10.1"
+chromadb = "1.0.20"
+prefect = "3.4.13"
 sqlalchemy = "2.0.37"
 asyncpg = "0.28.0"
 python-jose = "3.4.0"
@@ -38,7 +43,7 @@ pytest-asyncio = "*"
 pytest-cov = "*"
 factory-boy = "*"
 faker = "*"
-aiosqlite = "*"
+testcontainers = { extras = ["postgresql"], version = "*" }
 
 [tool.black]
 line-length = 88

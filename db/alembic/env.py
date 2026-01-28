@@ -6,14 +6,14 @@ from sqlalchemy.engine.base import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from db.models import Base
-from settings import db_settings
+from settings import postgres_settings
 
 config = context.config
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-config.set_section_option("alembic", "sqlalchemy.url", db_settings.url)
+config.set_section_option("alembic", "sqlalchemy.url", postgres_settings.url)
 
 target_metadata = Base.metadata
 
@@ -31,7 +31,7 @@ def run_migrations_offline() -> None:
 
     """
     context.configure(
-        url=db_settings.url,
+        url=postgres_settings.url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -65,7 +65,7 @@ async def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    connectable = create_async_engine(url=db_settings.url)
+    connectable = create_async_engine(url=postgres_settings.url)
 
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
